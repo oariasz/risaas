@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10 col-12">
+            <div class="card p-4 shadow">
+                <h4 class="fw-bold mb-4 text-center">Editar Licencia SaaS</h4>
+                <form method="POST">
+                    <!-- Repite el formulario igual que en index.html, pero con value prellenado: -->
+                    <!-- Ejemplo: -->
+                    <div class="mb-3">
+                        <label class="form-label">Proveedor SaaS</label>
+                        <input type="text" class="form-control" name="proveedor" value="{{ licencia.proveedor }}" required>
+                    </div>
+                    <!-- Haz esto con todos los campos, recuerda que si el tipo es Comercial, cliente debe ser obligatorio -->
+                    <div class="mb-3">
+                        <label class="form-label">Producto</label>
+                        <input type="text" class="form-control" name="producto" value="{{ licencia.producto }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Website</label>
+                        <input type="url" class="form-control" name="website" value="{{ licencia.website }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Fecha Suscripción</label>
+                        <input type="date" class="form-control" name="fecha_suscripcion" value="{{ licencia.fecha_suscripcion }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Hora Suscripción</label>
+                        <input type="time" class="form-control" name="hora_suscripcion" value="{{ licencia.hora_suscripcion }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Frecuencia de Pago</label>
+                        <select class="form-select" name="frecuencia_pago" required>
+                            <option value="Anual" {% if licencia.frecuencia_pago == 'Anual' %}selected{% endif %}>Anual</option>
+                            <option value="Mensual" {% if licencia.frecuencia_pago == 'Mensual' %}selected{% endif %}>Mensual</option>
+                            <option value="Semestral" {% if licencia.frecuencia_pago == 'Semestral' %}selected{% endif %}>Semestral</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Usuario</label>
+                        <input type="text" class="form-control" name="usuario" value="{{ licencia.usuario }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Correo</label>
+                        <input type="email" class="form-control" name="correo" value="{{ licencia.correo }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Próximo Pago (USD)</label>
+                        <input type="text" class="form-control" name="proximo_pago" value="{{ licencia.proximo_pago }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo</label>
+                        <select class="form-select" name="tipo" required>
+                            <option value="Personal" {% if licencia.tipo == 'Personal' %}selected{% endif %}>Personal</option>
+                            <option value="Comercial" {% if licencia.tipo == 'Comercial' %}selected{% endif %}>Comercial</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Cliente</label>
+                        <input type="text" class="form-control" name="cliente" value="{{ licencia.cliente }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notas</label>
+                        <textarea class="form-control" name="notas" rows="2">{{ licencia.notas }}</textarea>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success px-5">Guardar Cambios</button>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary ms-2">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

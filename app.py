@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file
 from flask_sqlalchemy import SQLAlchemy
-from flask_mail import Mail, Message
+from flask_mail import Mail
 from datetime import datetime, timedelta
 import csv
 import os
@@ -47,14 +47,6 @@ def calcular_vencimiento(fecha, frecuencia):
     elif frecuencia == "Semestral":
         return (fecha_dt + timedelta(days=182)).strftime("%Y-%m-%d")
     return fecha
-
-@app.before_serving
-def crear_db():
-    db.create_all()
-    if not os.path.exists("logs"):
-        os.mkdir("logs")
-app.before_first_request(crear_db)
-
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -111,11 +103,49 @@ def descargar_vcf(filename):
 @app.route("/eliminar/<int:id>", methods=["POST"])
 def eliminar(id):
     licencia = Licencia.query.get_or_404(id)
+    # Borra .ics asociado (si existe)
+    ics_path = f"logs/risaas_{licencia.producto}_{licencia.id}.ics"
+    if os.path.exists(ics_path):
+        os.remove(ics_path)
     db.session.delete(licencia)
     db.session.commit()
     log_action("ELIMINAR", licencia)
     flash("Licencia eliminada. Recuerda borrar la entrada del calendario si existe.", "warning")
     return redirect(url_for('index'))
+
+@app.route("/editar/<int:id>", methods=["GET", "POST"])
+def editar(id):
+    licencia = Licencia.query.get_or_404(id)
+    if request.method == "POST":
+        # Actualiza campos
+        licencia.proveedor = request.form['proveedor']
+        licencia.producto = request.form['producto']
+        licencia.website = request.form['website']
+        licencia.fecha_suscripcion = request.form['fecha_suscripcion']
+        licencia.hora_suscripcion = request.form.get('hora_suscripcion')
+        licencia.frecuencia_pago = request.form['frecuencia_pago']
+        licencia.usuario = request.form['usuario']
+        licencia.correo = request.form['correo']
+        licencia.proximo_pago = request.form['proximo_pago']
+        licencia.tipo = request.form['tipo']
+        licencia.cliente = request.form.get('cliente') if licencia.tipo == "Comercial" else ""
+        licencia.notas = request.form['notas']
+        licencia.estatus = "Activo"
+        licencia.vencimiento = calcular_vencimiento(licencia.fecha_suscripcion, licencia.frecuencia_pago)
+        db.session.commit()
+        # Borra .ics anterior si existe
+        ics_path = f"logs/risaas_{licencia.producto}_{licencia.id}.ics"
+        if os.path.exists(ics_path):
+            os.remove(ics_path)
+        # Genera nuevo .ics
+        vcf_path = crear_vcf(licencia)
+        # Log
+        log_action("MODIFICAR", licencia)
+        # Enviar email
+        enviar_email(mail, licencia, vcf_path)
+        flash("Licencia modificada correctamente. Recuerda eliminar el evento anterior de tu calendario si existe.", "info")
+        return redirect(url_for('index'))
+    return render_template("editar.html", licencia=licencia)
 
 @app.route("/reporte")
 def reporte():
@@ -129,4 +159,8 @@ def reporte():
     return send_file(csv_path, as_attachment=True)
 
 if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+        if not os.path.exists("logs"):
+            os.mkdir("logs")
     app.run(debug=True)
