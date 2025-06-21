@@ -48,11 +48,13 @@ def calcular_vencimiento(fecha, frecuencia):
         return (fecha_dt + timedelta(days=182)).strftime("%Y-%m-%d")
     return fecha
 
-@app.before_first_request
+@app.before_serving
 def crear_db():
     db.create_all()
     if not os.path.exists("logs"):
         os.mkdir("logs")
+app.before_first_request(crear_db)
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="shadow-card p-4 mb-3 bg-white">
+  <form method="post" class="row g-3" id="saasForm">
+    <div class="col-md-6">
+      <label class="form-label">Proveedor SaaS</label>
+      <input type="text" class="form-control" name="proveedor" required>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Producto</label>
+      <input type="text" class="form-control" name="producto" required>
+    </div>
+    <div class="col-md-12">
+      <label class="form-label">Website</label>
+      <input type="url" class="form-control" name="website" required>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Fecha Suscripción</label>
+      <input type="date" class="form-control" name="fecha_suscripcion" required>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Hora Suscripción (Opcional)</label>
+      <input type="time" class="form-control" name="hora_suscripcion">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Frecuencia de Pago</label>
+      <select class="form-select" name="frecuencia_pago" required>
+        <option>Anual</option><option>Mensual</option><option>Semestral</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Usuario</label>
+      <input type="text" class="form-control" name="usuario" required>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Correo</label>
+      <input type="email" class="form-control" name="correo" required>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Próximo Pago (USD)</label>
+      <input type="number" step="0.01" class="form-control" name="proximo_pago" required>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Tipo</label>
+      <select class="form-select" name="tipo" required id="tipoSelect" onchange="toggleCliente(this)">
+        <option>Personal</option><option>Comercial</option>
+      </select>
+    </div>
+    <div class="col-md-3" id="clienteField" style="display:none;">
+      <label class="form-label">Cliente</label>
+      <input type="text" class="form-control" name="cliente" id="clienteInput">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Notas</label>
+      <input type="text" class="form-control" name="notas">
+    </div>
+    <div class="col-12 text-end">
+      <button type="submit" class="btn btn-primary">Ingresar</button>
+      <button type="reset" class="btn btn-secondary">Cancelar</button>
+    </div>
+  </form>
+</div>
+<div class="mb-2 text-end">
+  <a href="{{ url_for('reporte') }}" class="btn btn-outline-success">Emitir Reporte</a>
+</div>
+<table class="table table-striped table-hover align-middle bg-white shadow-card">
+  <thead>
+    <tr>
+      <th>Proveedor</th><th>Producto</th><th>Fecha</th><th>Usuario</th><th>Cliente</th><th>Estatus</th><th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for l in licencias %}
+    <tr>
+      <td>{{l.proveedor}}</td>
+      <td>{{l.producto}}</td>
+      <td>{{l.fecha_suscripcion}}</td>
+      <td>{{l.usuario}}</td>
+      <td>{{l.cliente}}</td>
+      <td>{{l.estatus}}</td>
+      <td>
+        <form method="post" action="{{ url_for('eliminar', id=l.id) }}" style="display:inline;">
+          <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar esta licencia?');">Eliminar</button>
+        </form>
+        {% if l.vcf %}
+        <a href="{{ url_for('descargar_vcf', filename=l.vcf) }}" class="btn btn-sm btn-outline-secondary">Descargar VCF</a>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<script>
+function toggleCliente(sel) {
+  var field = document.getElementById("clienteField");
+  field.style.display = sel.value === "Comercial" ? "block" : "none";
+}
+{% if vcf_file %}
+Swal.fire({
+  icon: 'success',
+  title: '¡Licencia registrada!',
+  text: 'Se ha creado el registro y el archivo de evento.',
+  showConfirmButton: true
+});
+{% endif %}
+</script>
+{% endblock %}

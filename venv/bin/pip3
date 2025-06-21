@@ -1,6 +1,4 @@
-#!/bin/sh
-'''exec' "/Users/oariasz/Library/CloudStorage/GoogleDrive-oariasz72@gmail.com/Mi unidad/Aero/OneDrive/Estratek 2/dev/Flask/risaas/venv/bin/python3" "$0" "$@"
-' '''
+#!/Users/oariasz/dev/Flask/risaas/venv/bin/python3.11
 # -*- coding: utf-8 -*-
 import re
 import sys
