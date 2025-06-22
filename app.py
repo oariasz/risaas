@@ -25,7 +25,10 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 
-
+#### TODO: Eliminar
+print('Email Auth:')
+print(app.config['MAIL_USERNAME'])
+print(app.config['MAIL_PASSWORD'])
 
 mail = Mail(app)
 db = SQLAlchemy(app)
@@ -160,9 +163,47 @@ def reporte():
             writer.writerow([l.proveedor, l.producto, l.website, l.fecha_suscripcion, l.vencimiento, l.usuario, l.correo, l.proximo_pago, l.tipo, l.cliente, l.notas, l.estatus])
     return send_file(csv_path, as_attachment=True)
 
+
+if __name__ == "__main__":
+    import sys
+    import socket
+
+    def get_free_port(start_port=5000, max_tries=10):
+        port = start_port
+        for _ in range(max_tries):
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                try:
+                    s.bind(("", port))
+                    return port
+                except OSError:
+                    port += 1
+        raise OSError("No free port found in range.")
+
+    # Por defecto 5000
+    port = int(os.environ.get("PORT", 5000))
+    # Permite override via línea de comando: python app.py --port 5050
+    if "--port" in sys.argv:
+        idx = sys.argv.index("--port")
+        if len(sys.argv) > idx + 1:
+            port = int(sys.argv[idx + 1])
+
+    # Busca siguiente puerto libre si el primero está ocupado
+    port = get_free_port(port)
+
+    with app.app_context():
+        db.create_all()
+        if not os.path.exists("logs"):
+            os.mkdir("logs")
+    print(f"==> Servidor arrancando en http://127.0.0.1:{port}/")
+    app.run(debug=True, port=port)
+
+'''
+# Main anterior
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
         if not os.path.exists("logs"):
             os.mkdir("logs")
     app.run(debug=True)
+'''
