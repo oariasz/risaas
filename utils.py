@@ -1,6 +1,10 @@
 import os
 import datetime
 from flask_mail import Message
+from flask import flash
+import smtplib
+import unicodedata
+
 
 # ---- 1. Función para crear el archivo .ics (calendario) ----
 
@@ -53,11 +57,16 @@ def log_action(accion, licencia):
 # ---- 3. Función para enviar email (puedes ajustar los campos a gusto) ----
 
 def enviar_email(mail, licencia, vcf_path):
-    """Envía un email con los datos de la licencia y adjunta el .ics"""
+    """Envía un email con los datos de la licencia y adjunta el .ics, manejando errores y sanitizando el correo"""
+    # Normaliza el correo (elimina ñ, tildes, etc.)
+    correo = unicodedata.normalize('NFKD', licencia.correo).encode('ascii', 'ignore').decode('ascii')
+    # Opción: valida si el correo sigue siendo válido (opcional)
+
+    from flask_mail import Message
     msg = Message(
         subject=f"[RiSaaS] Nueva suscripción: {licencia.producto} ({licencia.proveedor})",
-        sender="oariasz72@gmail.com",  # Cambia esto si quieres que sea dinámico
-        recipients=[licencia.correo] if licencia.correo else ["oariasz72@gmail.com"]
+        sender="oariasz72@gmail.com",
+        recipients=[correo] if correo else ["oariasz72@gmail.com"]
     )
     msg.body = f"""
 Registro exitoso de suscripción SaaS:
@@ -78,9 +87,18 @@ Notas: {licencia.notas or '-'}
 
 Archivo calendario adjunto.
     """
+
     # Adjunta el archivo .ics si existe
     if vcf_path and os.path.exists(vcf_path):
         with open(vcf_path, "rb") as ics:
             msg.attach(os.path.basename(vcf_path), "text/calendar; charset=utf-8", ics.read())
 
-    mail.send(msg)
+    try:
+        mail.send(msg)
+        flash("Email enviado correctamente.", "info")
+    except smtplib.SMTPAuthenticationError:
+        flash("Error de autenticación con el servidor SMTP de Gmail. Verifica tu usuario y contraseña de aplicación.", "error")
+    except smtplib.SMTPException as e:
+        flash(f"Error SMTP al enviar email: {e}", "error")
+    except Exception as e:
+        flash(f"Error inesperado al enviar email: {e}", "error")

@@ -2,234 +2,303 @@
 <html lang="es" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
-    <title>RiSaaS</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Bootstrap 5.3 CDN -->
+    <title>RiSaaS - Registro Integrado de SaaS</title>
+    <!-- Bootstrap 5.3 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome CDN -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='custom.css') }}">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='custom.css') }}" rel="stylesheet">
     <style>
-        /* Modo dark para tabla y cards */
-        body[data-bs-theme="dark"] {
-            background: #181a1b;
-            color: #f4f4f4;
+        .logo-bar {
+            display: flex;
+            align-items: center;
+            padding: 1.5rem 0 1rem 0;
         }
-        .logo {
-            height: 54px;
-            transition: filter 0.4s;
+        .estratek-logo {
+            height: 56px;
+            width: auto;
+            cursor: pointer;
         }
-        .theme-toggle {
-            border: none;
-            background: transparent;
-            font-size: 1.7rem;
-            color: #999;
+        .modo-toggle {
+            position: absolute;
+            right: 1.5rem;
+            top: 1.5rem;
         }
-        .section-card {
-            background: rgba(255,255,255,0.90);
+        .form-modern {
+            background: var(--bs-body-bg);
             border-radius: 18px;
-            box-shadow: 0 6px 30px 0 rgba(0,0,0,0.09);
+            box-shadow: 0 6px 30px 0 rgba(80,90,120,.10);
+            padding: 2.2rem 2rem;
+            margin-bottom: 2rem;
         }
-        body[data-bs-theme="dark"] .section-card {
-            background: #23272b;
-            color: #f4f4f4;
+        .proximo-vencimiento {
+            background: #fffbe6;
+            color: #b38f00;
+            font-weight: 700;
+            border-radius: 7px;
+            padding: 0.3em 0.9em;
+            display: inline-block;
+        }
+        .tabla-crud {
+            background: var(--bs-body-bg);
+            border-radius: 18px;
+            box-shadow: 0 4px 20px 0 rgba(100,120,130,.07);
+            padding: 2rem 1.5rem;
         }
         .btn-modern {
-            border-radius: 20px;
-            font-weight: 500;
+            border-radius: 2em;
         }
-        .proximos-box {
-            min-height: 200px;
-            border-left: 4px solid #049fa3;
+        .btn-action {
+            background: transparent;
+            border: none;
+            color: var(--bs-secondary-color, #868e96);
+            font-size: 1.2em;
+            transition: color .15s;
+            margin-right: 0.4em;
+            vertical-align: middle;
         }
-        @media (max-width: 991px) {
-            .proximos-box { border: none; border-top: 4px solid #049fa3; }
-        }
-        .btn-outline-darkmode {
-            background: none;
-            border: 1px solid #444;
-            color: #444;
+        .btn-action.edit:hover { color: #F7B500; }
+        .btn-action.delete:hover { color: #FA5252; }
+        .btn-action.download:hover { color: #40C057; }
+        /* Responsive */
+        @media (max-width: 900px) {
+            .logo-bar { flex-direction: column; align-items: flex-start; }
+            .modo-toggle { position:static; margin: 1em 0; }
         }
     </style>
 </head>
-<body class="py-4">
-
-<div class="container">
-    <div class="d-flex align-items-center mb-2">
-        <!-- Logo: cambia con modo -->
+<body>
+<div class="container my-3">
+    <!-- Logo y toggle de modo oscuro -->
+    <div class="logo-bar position-relative">
         <a href="https://estratekdata.com" target="_blank">
-            <img id="logoEstratek" src="{{ url_for('static', filename='Logotipo PNG.png') }}" alt="Estratek Logo" class="logo me-2">
+            <img src="{{ url_for('static', filename='Logotipo PNG.png') }}"
+                data-logo-light="{{ url_for('static', filename='Logotipo PNG.png') }}"
+                data-logo-dark="{{ url_for('static', filename='Logotipo Gris 00% Blanco.png') }}"
+                alt="Estratek" class="estratek-logo" id="estratekLogo">
         </a>
-        <button class="ms-auto theme-toggle" id="toggleThemeBtn" title="Cambiar modo oscuro/claro">
-            <i class="fa-regular fa-moon"></i>
+        <button class="btn btn-outline-dark ms-auto modo-toggle" type="button" id="modoSwitch" title="Cambiar modo">
+            <i class="fa-solid fa-moon"></i>
         </button>
     </div>
-
-    <div class="text-center mb-1">
-        <h1 class="display-5 fw-bold">RiSaaS</h1>
-        <div class="fs-5 text-muted mb-4">Registro Integrado de SaaS</div>
-    </div>
+    <!-- Título -->
+    <h1 class="display-5 fw-bold mb-0">RiSaaS</h1>
+    <p class="lead text-secondary mb-3">Registro Integrado de SaaS</p>
 
     <div class="row g-4">
-        <!-- FORMULARIO -->
+        <!-- Columna principal izquierda (Formulario de registro) -->
         <div class="col-lg-7">
-            <div class="section-card p-4 mb-2">
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                  {% if messages %}
-                    {% for category, message in messages %}
-                      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        <i class="fa-solid fa-circle-info me-2"></i>{{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-                      </div>
-                    {% endfor %}
-                  {% endif %}
-                {% endwith %}
-
-                <form method="post" autocomplete="off">
-                  <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label">Proveedor SaaS</label>
-                        <input required name="proveedor" type="text" class="form-control" placeholder="Ej: Microsoft">
+            <div class="form-modern mb-2">
+                <form method="POST" autocomplete="off">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <label class="form-label">Proveedor SaaS</label>
+                            <input required name="proveedor" type="text" class="form-control"
+                                   placeholder="Ej: Microsoft"
+                                   value="{{ editar_licencia.proveedor if editar_licencia else '' }}">
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label">Producto</label>
+                            <input required name="producto" type="text" class="form-control"
+                                   placeholder="Ej: PowerBI"
+                                   value="{{ editar_licencia.producto if editar_licencia else '' }}">
+                        </div>
+                        <div class="col-sm-8">
+                            <label class="form-label">Website</label>
+                            <input required name="website" type="url" class="form-control"
+                                   placeholder="https://..."
+                                   value="{{ editar_licencia.website if editar_licencia else '' }}">
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label">Fecha Suscripción</label>
+                            <input required name="fecha_suscripcion" type="date" class="form-control"
+                                   value="{{ editar_licencia.fecha_suscripcion if editar_licencia else '' }}">
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label">Hora (opcional)</label>
+                            <input name="hora_suscripcion" type="time" class="form-control"
+                                   value="{{ editar_licencia.hora_suscripcion if editar_licencia else '' }}">
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label">Frecuencia de Pago</label>
+                            <select required name="frecuencia_pago" class="form-select">
+                                <option value="">Elige</option>
+                                <option value="Anual" {% if editar_licencia and editar_licencia.frecuencia_pago == 'Anual' %}selected{% endif %}>Anual</option>
+                                <option value="Semestral" {% if editar_licencia and editar_licencia.frecuencia_pago == 'Semestral' %}selected{% endif %}>Semestral</option>
+                                <option value="Mensual" {% if editar_licencia and editar_licencia.frecuencia_pago == 'Mensual' %}selected{% endif %}>Mensual</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label">Usuario</label>
+                            <input required name="usuario" type="text" class="form-control"
+                                   placeholder="Ej: oariasz"
+                                   value="{{ editar_licencia.usuario if editar_licencia else '' }}">
+                        </div>
+                        <div class="col-sm-8">
+                            <label class="form-label">Correo</label>
+                            <input required list="mails" name="correo" type="email" class="form-control"
+                                   placeholder="Ej: correo@dominio.com"
+                                   value="{{ editar_licencia.correo if editar_licencia else '' }}">
+                            <datalist id="mails">
+                                <option value="oariasz72@gmail.com">
+                                <option value="omarariasus@gmail.com">
+                                <option value="estratekdata@gmail.com">
+                                <option value="omcususcripcion1@gmail.com">
+                                <option value="omcususcripcion2@gmail.com">
+                            </datalist>
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label">Próximo Pago (USD)</label>
+                            <input required name="proximo_pago" type="number" min="0" step="0.01" class="form-control"
+                                   placeholder="12.00"
+                                   value="{{ editar_licencia.proximo_pago if editar_licencia else '' }}">
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label">Tipo</label>
+                            <select required name="tipo" class="form-select" id="tipoSelect"
+                                onchange="toggleCliente(this.value)">
+                                <option value="Personal" {% if editar_licencia and editar_licencia.tipo == 'Personal' %}selected{% endif %}>Personal</option>
+                                <option value="Comercial" {% if editar_licencia and editar_licencia.tipo == 'Comercial' %}selected{% endif %}>Comercial</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-8" id="clienteDiv" style="display: {% if editar_licencia and editar_licencia.tipo == 'Comercial' %}block{% else %}none{% endif %};">
+                            <label class="form-label">Cliente <span class="text-danger">*</span></label>
+                            <input name="cliente" type="text" class="form-control"
+                                   placeholder="Ej: OMCU"
+                                   value="{{ editar_licencia.cliente if editar_licencia else '' }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Notas</label>
+                            <textarea name="notas" class="form-control" rows="2"
+                                      placeholder="Comentarios, detalles de la suscripción...">{{ editar_licencia.notas if editar_licencia else '' }}</textarea>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Producto</label>
-                        <input required name="producto" type="text" class="form-control" placeholder="Ej: PowerBI">
+                    <div class="mt-4 d-flex align-items-center gap-2">
+                        {% if editar_licencia %}
+                            <button type="submit" class="btn btn-warning btn-modern">
+                                <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Cambios
+                            </button>
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-modern ms-2">
+                                <i class="fa-solid fa-xmark"></i> Cancelar Edición
+                            </a>
+                        {% else %}
+                            <button type="submit" class="btn btn-success btn-modern">
+                                <i class="fa-solid fa-plus-circle me-1"></i> Ingresar
+                            </button>
+                        {% endif %}
+                        {% if vcf_file %}
+                            <a href="{{ url_for('descargar_vcf', filename=vcf_file) }}" class="btn btn-outline-primary btn-modern ms-2">
+                                <i class="fa-solid fa-calendar-arrow-down"></i> Descargar VCF
+                            </a>
+                        {% endif %}
+                        <a href="{{ url_for('reporte') }}" class="btn btn-outline-info btn-modern ms-2">
+                            <i class="fa-solid fa-file-csv"></i> Emitir Reporte
+                        </a>
                     </div>
-                    <div class="col-12">
-                        <label class="form-label">Website</label>
-                        <input name="website" type="url" class="form-control" placeholder="https://">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Fecha Suscripción</label>
-                        <input required name="fecha_suscripcion" type="date" class="form-control">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Hora Suscripción <span class="text-muted small">(opcional)</span></label>
-                        <input name="hora_suscripcion" type="time" class="form-control">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Frecuencia de Pago</label>
-                        <select required name="frecuencia_pago" class="form-select">
-                            <option value="Anual">Anual</option>
-                            <option value="Mensual">Mensual</option>
-                            <option value="Semestral">Semestral</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Próximo Pago (USD)</label>
-                        <input required name="proximo_pago" type="number" min="0" step="0.01" class="form-control" placeholder="Ej: 12.00">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Tipo</label>
-                        <select required name="tipo" class="form-select" id="tipoSelect">
-                            <option value="Personal">Personal</option>
-                            <option value="Comercial">Comercial</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6" id="clienteGroup" style="display: none;">
-                        <label class="form-label">Cliente <span class="text-danger">*</span></label>
-                        <input name="cliente" type="text" class="form-control" placeholder="Obligatorio si Comercial">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Usuario</label>
-                        <input required name="usuario" type="text" class="form-control" placeholder="Ej: oariasz">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Correo</label>
-                        <input list="correosList" required name="correo" type="email" class="form-control" placeholder="Email">
-                        <datalist id="correosList">
-                            <option value="oariasz72@gmail.com">
-                            <option value="omarariasus@gmail.com">
-                            <option value="estratekdata@gmail.com">
-                            <option value="omcususcripción1@gmail.com">
-                            <option value="omcususcripción2@gmail.com">
-                        </datalist>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label">Notas</label>
-                        <textarea name="notas" class="form-control" placeholder="Observaciones, aumentos, etc."></textarea>
-                    </div>
-                  </div>
-                  <div class="mt-4 d-flex justify-content-between gap-2">
-                    <button type="submit" class="btn btn-success btn-modern">
-                        <i class="fa-solid fa-plus-circle me-1"></i> Ingresar
-                    </button>
-                    <button type="reset" class="btn btn-outline-secondary btn-modern">
-                        <i class="fa-solid fa-eraser me-1"></i> Cancelar
-                    </button>
-                    <a href="{{ url_for('reporte') }}" class="btn btn-info btn-modern" title="Descargar reporte CSV">
-                        <i class="fa-solid fa-file-arrow-down me-1"></i> Emitir Reporte
-                    </a>
-                  </div>
                 </form>
             </div>
+            <!-- Alertas flash -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'warning' if category=='error' else category }} alert-dismissible fade show my-2" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+            <!-- Tabla CRUD (abajo del formulario) -->
+            <div class="tabla-crud mt-4">
+                <h5 class="fw-semibold mb-3"><i class="fa-solid fa-database"></i> Licencias registradas</h5>
+                <div class="table-responsive">
+                <table class="table align-middle table-hover">
+                    <thead>
+                        <tr>
+                            <th>Proveedor</th>
+                            <th>Producto</th>
+                            <th>Usuario</th>
+                            <th>Vencimiento</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for l in licencias %}
+                        <tr>
+                            <td>{{ l.proveedor }}</td>
+                            <td>{{ l.producto }}</td>
+                            <td>{{ l.usuario }}</td>
+                            <td><span class="proximo-vencimiento">{{ l.vencimiento }}</span></td>
+                            <td>
+                                <a href="{{ url_for('descargar_vcf', filename='risaas_' ~ l.producto ~ '_' ~ l.id ~ '.ics') }}"
+                                    title="Descargar VCF" class="btn-action download"><i class="fa-solid fa-download"></i></a>
+                                <a href="{{ url_for('editar', id=l.id) }}" class="btn-action edit" title="Editar"><i class="fa-solid fa-pen-to-square"></i></a>
+                                <form method="post" action="{{ url_for('eliminar', id=l.id) }}" style="display:inline;" onsubmit="return confirm('¿Seguro de eliminar esta suscripción?');">
+                                    <button type="submit" class="btn-action delete" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            </div>
         </div>
-        <!-- PRÓXIMOS VENCIMIENTOS -->
+        <!-- Columna derecha (Próximos Vencimientos) -->
         <div class="col-lg-5">
-            <div class="section-card p-4 proximos-box">
-                <h5 class="mb-3"><i class="fa-regular fa-clock me-2"></i>Próximos vencimientos</h5>
-                {% if licencias %}
-                    <ul class="list-group list-group-flush">
-                    {% for l in licencias|sort(attribute='vencimiento') if l.estatus=="Activo" %}
-                        <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">
+            <div class="mb-2">
+                <h5 class="fw-semibold">Próximos Vencimientos</h5>
+                <ul class="list-group">
+                {% for l in licencias|sort(attribute='vencimiento') %}
+                    {% if l.estatus == "Activo" %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center" style="border: none;">
                             <span>
-                              <i class="fa-solid fa-circle-dot text-danger me-2"></i>
-                              <strong>{{ l.producto }}</strong>
-                              <span class="text-muted small ms-1">({{ l.proveedor }})</span>
-                              <span class="badge bg-light text-dark ms-2">{{ l.vencimiento }}</span>
+                                <span class="proximo-vencimiento me-2">{{ l.vencimiento }}</span>
+                                <b>{{ l.producto }}</b>
+                                <span class="text-muted">({{ l.proveedor }})</span>
                             </span>
+                            <small class="text-secondary">{{ l.usuario }}</small>
                         </li>
-                    {% else %}
-                        <li class="list-group-item bg-transparent text-muted">No hay suscripciones próximas.</li>
-                    {% endfor %}
-                    </ul>
+                    {% endif %}
                 {% else %}
-                    <div class="text-muted">No hay suscripciones registradas.</div>
-                {% endif %}
+                    <li class="list-group-item">No hay licencias registradas.</li>
+                {% endfor %}
+                </ul>
             </div>
         </div>
     </div>
 </div>
-
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Mostrar u ocultar Cliente según tipo
-    document.addEventListener("DOMContentLoaded", function () {
-        var tipoSelect = document.getElementById('tipoSelect');
-        var clienteGroup = document.getElementById('clienteGroup');
-        function toggleCliente() {
-            if (tipoSelect.value === "Comercial") {
-                clienteGroup.style.display = '';
-            } else {
-                clienteGroup.style.display = 'none';
-            }
-        }
-        tipoSelect.addEventListener('change', toggleCliente);
-        toggleCliente();
-
-        // Modo oscuro
+    // Toggle Cliente
+    function toggleCliente(tipo) {
+        document.getElementById('clienteDiv').style.display = (tipo === "Comercial") ? 'block' : 'none';
+    }
+    document.addEventListener("DOMContentLoaded", function() {
+        // Cambiar logo con modo claro/oscuro
+        const logo = document.getElementById('estratekLogo');
         const html = document.documentElement;
-        const logo = document.getElementById('logoEstratek');
-        const toggleBtn = document.getElementById('toggleThemeBtn');
-        function setTheme(mode) {
-            html.setAttribute('data-bs-theme', mode);
-            // Cambia logo según tema
-            logo.src = mode === 'dark'
-                ? "{{ url_for('static', filename='Logotipo Gris 00% Blanco.png') }}"
-                : "{{ url_for('static', filename='Logotipo PNG.png') }}";
-            toggleBtn.innerHTML = mode === 'dark'
-                ? '<i class="fa-regular fa-sun"></i>'
-                : '<i class="fa-regular fa-moon"></i>';
+        const modoSwitch = document.getElementById('modoSwitch');
+        function updateLogo() {
+            if (html.getAttribute('data-bs-theme') === 'dark')
+                logo.src = logo.dataset.logoDark;
+            else
+                logo.src = logo.dataset.logoLight;
         }
-        // Intenta respetar preferencia del sistema
-        let initial = (window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
-        setTheme(localStorage.getItem('risaas-theme') || initial);
-        toggleBtn.onclick = () => {
-            let newTheme = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
-            setTheme(newTheme);
-            localStorage.setItem('risaas-theme', newTheme);
+        // Modo inicial (si el usuario tiene preferencia)
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches)
+            html.setAttribute('data-bs-theme', 'dark');
+        updateLogo();
+        modoSwitch.onclick = function() {
+            const current = html.getAttribute('data-bs-theme');
+            html.setAttribute('data-bs-theme', current === 'dark' ? 'light' : 'dark');
+            updateLogo();
+            this.classList.toggle("btn-outline-dark");
+            this.classList.toggle("btn-outline-light");
         };
+        // Si está editando, muestra cliente si aplica
+        if(document.getElementById('tipoSelect')) toggleCliente(document.getElementById('tipoSelect').value);
     });
 </script>
 </body>

@@ -1,13 +1,19 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file
 from flask_sqlalchemy import SQLAlchemy
-from flask_mail import Mail
+from flask_mail import Mail, Message
 from datetime import datetime, timedelta
 import csv
 import os
 from utils import crear_vcf, log_action, enviar_email
+from dotenv import load_dotenv
+import os
+
+
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkey'  # cambia esto en producción
+app.secret_key = os.getenv('SECRET_KEY', 'supersecretkey')  # valor por defecto si no existe
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///risaas.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -15,8 +21,11 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'oariasz72@gmail.com'
-app.config['MAIL_PASSWORD'] = 'TU_CONTRASEÑA_DE_APP_GMAIL'  # Usa app password de Gmail
+# Credenciales del correo
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+
+
 
 mail = Mail(app)
 db = SQLAlchemy(app)
@@ -96,28 +105,11 @@ def index():
     else:
         return render_template("index.html", licencias=Licencia.query.all())
 
-@app.route("/descargar_vcf/<filename>")
-def descargar_vcf(filename):
-    return send_file(f"logs/{filename}", as_attachment=True)
-
-@app.route("/eliminar/<int:id>", methods=["POST"])
-def eliminar(id):
-    licencia = Licencia.query.get_or_404(id)
-    # Borra .ics asociado (si existe)
-    ics_path = f"logs/risaas_{licencia.producto}_{licencia.id}.ics"
-    if os.path.exists(ics_path):
-        os.remove(ics_path)
-    db.session.delete(licencia)
-    db.session.commit()
-    log_action("ELIMINAR", licencia)
-    flash("Licencia eliminada. Recuerda borrar la entrada del calendario si existe.", "warning")
-    return redirect(url_for('index'))
-
 @app.route("/editar/<int:id>", methods=["GET", "POST"])
 def editar(id):
     licencia = Licencia.query.get_or_404(id)
     if request.method == "POST":
-        # Actualiza campos
+        # Actualiza campos desde el formulario
         licencia.proveedor = request.form['proveedor']
         licencia.producto = request.form['producto']
         licencia.website = request.form['website']
@@ -132,20 +124,30 @@ def editar(id):
         licencia.notas = request.form['notas']
         licencia.estatus = "Activo"
         licencia.vencimiento = calcular_vencimiento(licencia.fecha_suscripcion, licencia.frecuencia_pago)
+
         db.session.commit()
-        # Borra .ics anterior si existe
-        ics_path = f"logs/risaas_{licencia.producto}_{licencia.id}.ics"
-        if os.path.exists(ics_path):
-            os.remove(ics_path)
-        # Genera nuevo .ics
+
+        # Genera VCF y envía mail
         vcf_path = crear_vcf(licencia)
-        # Log
-        log_action("MODIFICAR", licencia)
-        # Enviar email
+        log_action("EDITAR", licencia)
         enviar_email(mail, licencia, vcf_path)
-        flash("Licencia modificada correctamente. Recuerda eliminar el evento anterior de tu calendario si existe.", "info")
+        flash("¡Licencia modificada correctamente!", "success")
         return redirect(url_for('index'))
-    return render_template("editar.html", licencia=licencia)
+    else:
+        return render_template("index.html", editar_licencia=licencia, licencias=Licencia.query.all())
+
+@app.route("/descargar_vcf/<filename>")
+def descargar_vcf(filename):
+    return send_file(f"logs/{filename}", as_attachment=True)
+
+@app.route("/eliminar/<int:id>", methods=["POST"])
+def eliminar(id):
+    licencia = Licencia.query.get_or_404(id)
+    db.session.delete(licencia)
+    db.session.commit()
+    log_action("ELIMINAR", licencia)
+    flash("Licencia eliminada. Recuerda borrar la entrada del calendario si existe.", "warning")
+    return redirect(url_for('index'))
 
 @app.route("/reporte")
 def reporte():

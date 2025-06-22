@@ -1,0 +1,19 @@
+body {
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    background: var(--bs-body-bg);
+    color: var(--bs-body-color);
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 2px #F7B50055;
+    border-color: #F7B500;
+}
+
+.form-label {
+    font-weight: 500;
+}
+
+.alert {
+    font-size: 1.08em;
+}
