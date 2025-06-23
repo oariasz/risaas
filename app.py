@@ -25,11 +25,6 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 
-#### TODO: Eliminar
-print('Email Auth:')
-print(app.config['MAIL_USERNAME'])
-print(app.config['MAIL_PASSWORD'])
-
 mail = Mail(app)
 db = SQLAlchemy(app)
 
@@ -195,7 +190,7 @@ if __name__ == "__main__":
         if not os.path.exists("logs"):
             os.mkdir("logs")
     print(f"==> Servidor arrancando en http://127.0.0.1:{port}/")
-    app.run(debug=True, port=port)
+    app.run(host="127.0.0.1", port=port, debug=True)
 
 '''
 # Main anterior
